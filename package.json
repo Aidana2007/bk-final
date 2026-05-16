@@ -1,0 +1,38 @@
+{
+  "name": "capstone-constant-product-amm",
+  "version": "1.0.0",
+  "description": "Foundry + OpenZeppelin v5 constant-product AMM capstone protocol module",
+  "type": "commonjs",
+  "scripts": {
+    "fmt": "forge fmt",
+    "fmt:check": "forge fmt --check",
+    "build": "forge build",
+    "test": "forge test",
+    "test:fuzz": "forge test --match-contract AMMFuzzTest",
+    "test:invariant": "forge test --match-contract AMMInvariantTest",
+    "coverage": "forge coverage",
+    "gas": "forge snapshot --match-contract AMMGasTest",
+    "slither": "slither . --filter-paths \"node_modules|test|script\""
+  },
+  "keywords": [
+    "solidity",
+    "foundry",
+    "amm",
+    "defi",
+    "uups",
+    "openzeppelin",
+    "optimism"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@openzeppelin/contracts": "^5.6.1",
+    "@openzeppelin/contracts-upgradeable": "^5.6.1",
+    "forge-std": "^1.1.2",
+    "solc": "^0.8.35"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

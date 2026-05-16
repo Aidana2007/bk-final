@@ -1,0 +1,31 @@
+[profile.default]
+src = "src"
+test = "test"
+script = "script"
+out = "out"
+libs = ["node_modules"]
+solc_version = "0.8.24"
+optimizer = true
+optimizer_runs = 200
+via_ir = true
+evm_version = "cancun"
+fs_permissions = [{ access = "read", path = "./" }]
+
+[fmt]
+line_length = 100
+tab_width = 4
+bracket_spacing = true
+
+[invariant]
+runs = 256
+depth = 32
+fail_on_revert = false
+
+[profile.gas]
+gas_reports = ["ConstantProductAMM", "AMMFactory", "AMMLPToken"]
+
+[rpc_endpoints]
+optimism_sepolia = "${OPTIMISM_SEPOLIA_RPC_URL}"
+
+[etherscan]
+optimism_sepolia = { key = "${ETHERSCAN_API_KEY}", chain = 11155420 }
