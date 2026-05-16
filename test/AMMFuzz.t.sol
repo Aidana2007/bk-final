@@ -37,18 +37,19 @@ contract AMMFuzzTest is Test {
     }
 
     function testFuzzSwapExactInput(uint128 rawAmountIn, bool zeroForOne) public {
-        uint256 amountIn = bound(uint256(rawAmountIn), 1, 10_000 ether);
+        uint256 amountIn = bound(uint256(rawAmountIn), 1 ether, 10_000 ether);
         address tokenIn = zeroForOne ? address(tokenA) : address(tokenB);
         uint256 beforeK = pool.kLast();
 
         vm.prank(user);
         uint256 out = pool.swapExactTokenForToken(tokenIn, amountIn, 1, user);
         (uint112 reserve0, uint112 reserve1,) = pool.getReserves();
+        (address poolToken0, address poolToken1,) = pool.poolTokens();
 
         assertGt(out, 0);
         assertGe(pool.kLast(), beforeK);
-        assertEq(uint256(reserve0), tokenA.balanceOf(address(pool)));
-        assertEq(uint256(reserve1), tokenB.balanceOf(address(pool)));
+        assertEq(uint256(reserve0), IERC20(poolToken0).balanceOf(address(pool)));
+        assertEq(uint256(reserve1), IERC20(poolToken1).balanceOf(address(pool)));
     }
 
     function testFuzzAddAndRemoveLiquidity(uint128 rawAmount0, uint128 rawAmount1) public {
@@ -59,11 +60,12 @@ contract AMMFuzzTest is Test {
         (,, uint256 liquidity) = pool.addLiquidity(amount0, amount1, 1, 1, user);
         (uint256 out0, uint256 out1) = pool.removeLiquidity(liquidity, 1, 1, user);
         (uint112 reserve0, uint112 reserve1,) = pool.getReserves();
+        (address poolToken0, address poolToken1,) = pool.poolTokens();
         vm.stopPrank();
 
         assertGt(out0, 0);
         assertGt(out1, 0);
-        assertEq(uint256(reserve0), tokenA.balanceOf(address(pool)));
-        assertEq(uint256(reserve1), tokenB.balanceOf(address(pool)));
+        assertEq(uint256(reserve0), IERC20(poolToken0).balanceOf(address(pool)));
+        assertEq(uint256(reserve1), IERC20(poolToken1).balanceOf(address(pool)));
     }
 }

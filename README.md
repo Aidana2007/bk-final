@@ -99,4 +99,4 @@ The predicted pool address depends on the predicted LP token address because the
 - Tests: unit, fuzz, invariant, and gas benchmark contracts are present.
 - Yul benchmark: local `solc` estimates show `getAmountOutYul` at 703 gas vs 837 gas for the Solidity benchmark wrapper. A real `.gas-snapshot` is generated with `forge snapshot` once Foundry is available.
 - CI/CD: GitHub Actions runs format, build, tests, coverage, gas snapshot check, and Slither.
-- Code comments: removed from Solidity per request. This intentionally means the original NatSpec checklist item is not satisfied in-code.
+- Code comments: NatSpec is included on the public contract surface for checklist/readiness review.

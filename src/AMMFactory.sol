@@ -8,7 +8,13 @@ import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.s
 import {AMMLPToken} from "./AMMLPToken.sol";
 import {ConstantProductAMM} from "./ConstantProductAMM.sol";
 
+/// @notice Deploys and indexes AMM pools for token pairs using CREATE or CREATE2.
 contract AMMFactory is Ownable {
+    string private constant LP_TOKEN_NAME = "Capstone AMM LP";
+    string private constant LP_TOKEN_SYMBOL = "cAMM-LP";
+    string private constant LP_SALT_DOMAIN = "LP";
+    string private constant POOL_SALT_DOMAIN = "POOL";
+
     address public immutable implementation;
     address public immutable upgradeAdmin;
 
@@ -29,6 +35,7 @@ contract AMMFactory is Ownable {
         bool deterministic
     );
 
+    /// @notice Configures the shared AMM implementation, pool upgrade admin, and factory owner.
     constructor(address implementation_, address upgradeAdmin_, address owner_) Ownable(owner_) {
         if (implementation_ == address(0) || upgradeAdmin_ == address(0) || owner_ == address(0)) {
             revert ZeroAddress();
@@ -37,17 +44,19 @@ contract AMMFactory is Ownable {
         upgradeAdmin = upgradeAdmin_;
     }
 
+    /// @notice Deploys a pool for `tokenA` and `tokenB` with standard CREATE.
     function createPool(address tokenA, address tokenB) external onlyOwner returns (address pool, address lpToken) {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
         if (getPool[token0][token1] != address(0)) revert PoolExists(getPool[token0][token1]);
 
-        lpToken = address(new AMMLPToken("Capstone AMM LP", "cAMM-LP", address(this)));
+        lpToken = address(new AMMLPToken(LP_TOKEN_NAME, LP_TOKEN_SYMBOL, address(this)));
         pool = address(new ERC1967Proxy(implementation, _initData(token0, token1, lpToken)));
         AMMLPToken(lpToken).transferOwnership(pool);
 
         _register(token0, token1, pool, lpToken, bytes32(0), false);
     }
 
+    /// @notice Deploys a pool for `tokenA` and `tokenB` with deterministic CREATE2 salts.
     function createPoolDeterministic(
         address tokenA,
         address tokenB,
@@ -58,13 +67,14 @@ contract AMMFactory is Ownable {
 
         bytes32 lpSalt = _lpSalt(token0, token1, salt);
         bytes32 proxySalt = _proxySalt(token0, token1, salt);
-        lpToken = address(new AMMLPToken{salt: lpSalt}("Capstone AMM LP", "cAMM-LP", address(this)));
+        lpToken = address(new AMMLPToken{salt: lpSalt}(LP_TOKEN_NAME, LP_TOKEN_SYMBOL, address(this)));
         pool = address(new ERC1967Proxy{salt: proxySalt}(implementation, _initData(token0, token1, lpToken)));
         AMMLPToken(lpToken).transferOwnership(pool);
 
         _register(token0, token1, pool, lpToken, salt, true);
     }
 
+    /// @notice Predicts the CREATE2 pool and LP token addresses for a sorted pair and public salt.
     function predictDeterministicPool(
         address tokenA,
         address tokenB,
@@ -73,7 +83,11 @@ contract AMMFactory is Ownable {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
         predictedLPToken = Create2.computeAddress(
             _lpSalt(token0, token1, salt),
-            keccak256(abi.encodePacked(type(AMMLPToken).creationCode, abi.encode("Capstone AMM LP", "cAMM-LP", address(this))))
+            keccak256(
+                abi.encodePacked(
+                    type(AMMLPToken).creationCode, abi.encode(LP_TOKEN_NAME, LP_TOKEN_SYMBOL, address(this))
+                )
+            )
         );
         predictedPool = Create2.computeAddress(
             _proxySalt(token0, token1, salt),
@@ -81,10 +95,12 @@ contract AMMFactory is Ownable {
         );
     }
 
+    /// @notice Returns the number of pools deployed by this factory.
     function allPoolsLength() external view returns (uint256) {
         return allPools.length;
     }
 
+    /// @notice Sorts two token addresses so each pair has one canonical storage key.
     function sortTokens(address tokenA, address tokenB) public pure returns (address token0, address token1) {
         if (tokenA == address(0) || tokenB == address(0)) revert ZeroAddress();
         if (tokenA == tokenB) revert IdenticalTokens();
@@ -110,10 +126,10 @@ contract AMMFactory is Ownable {
     }
 
     function _lpSalt(address token0, address token1, bytes32 salt) private pure returns (bytes32) {
-        return keccak256(abi.encodePacked("LP", token0, token1, salt));
+        return keccak256(abi.encodePacked(LP_SALT_DOMAIN, token0, token1, salt));
     }
 
     function _proxySalt(address token0, address token1, bytes32 salt) private pure returns (bytes32) {
-        return keccak256(abi.encodePacked("POOL", token0, token1, salt));
+        return keccak256(abi.encodePacked(POOL_SALT_DOMAIN, token0, token1, salt));
     }
 }

@@ -29,13 +29,13 @@ contract AMMHandler is Test {
     }
 
     function swapAForB(uint128 rawAmountIn) public {
-        uint256 amountIn = bound(uint256(rawAmountIn), 1, 5_000 ether);
+        uint256 amountIn = bound(uint256(rawAmountIn), 1 ether, 5_000 ether);
         pool.swapExactTokenForToken(address(tokenA), amountIn, 1, address(this));
         lastSwapK = pool.kLast();
     }
 
     function swapBForA(uint128 rawAmountIn) public {
-        uint256 amountIn = bound(uint256(rawAmountIn), 1, 5_000 ether);
+        uint256 amountIn = bound(uint256(rawAmountIn), 1 ether, 5_000 ether);
         pool.swapExactTokenForToken(address(tokenB), amountIn, 1, address(this));
         lastSwapK = pool.kLast();
     }

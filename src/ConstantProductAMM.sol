@@ -3,7 +3,6 @@ pragma solidity ^0.8.24;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -11,7 +10,47 @@ import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/Pau
 
 import {IAMMLPToken} from "./interfaces/IAMMLPToken.sol";
 
-contract ConstantProductAMM is Initializable, OwnableUpgradeable, UUPSUpgradeable, PausableUpgradeable, ReentrancyGuard {
+/// @notice Upgrade-safe reentrancy guard using namespaced storage for proxy deployments.
+abstract contract ReentrancyGuardUpgradeable is Initializable {
+    uint256 private constant NOT_ENTERED = 1;
+    uint256 private constant ENTERED = 2;
+
+    bytes32 private constant REENTRANCY_GUARD_STORAGE_LOCATION =
+        0x56f5a5185e86f8629e18fee3978b5b7fdc5ec3f3dd6cb5f602d6593867383c00;
+
+    struct ReentrancyGuardStorage {
+        uint256 status;
+    }
+
+    error ReentrantCall();
+
+    modifier nonReentrant() {
+        ReentrancyGuardStorage storage $ = _getReentrancyGuardStorage();
+        if ($.status == ENTERED) revert ReentrantCall();
+        $.status = ENTERED;
+        _;
+        $.status = NOT_ENTERED;
+    }
+
+    function __ReentrancyGuard_init() internal onlyInitializing {
+        _getReentrancyGuardStorage().status = NOT_ENTERED;
+    }
+
+    function _getReentrancyGuardStorage() private pure returns (ReentrancyGuardStorage storage $) {
+        assembly {
+            $.slot := REENTRANCY_GUARD_STORAGE_LOCATION
+        }
+    }
+}
+
+/// @notice UUPS-upgradeable constant-product AMM with 0.3% swap fees and LP shares.
+contract ConstantProductAMM is
+    Initializable,
+    OwnableUpgradeable,
+    UUPSUpgradeable,
+    PausableUpgradeable,
+    ReentrancyGuardUpgradeable
+{
     using SafeERC20 for IERC20;
 
     uint256 public constant BPS = 10_000;
@@ -73,6 +112,7 @@ contract ConstantProductAMM is Initializable, OwnableUpgradeable, UUPSUpgradeabl
         _disableInitializers();
     }
 
+    /// @notice Initializes a pool proxy with its token pair, LP token, factory, and upgrade admin.
     function initialize(
         address upgradeAdmin,
         address token0_,
@@ -88,6 +128,7 @@ contract ConstantProductAMM is Initializable, OwnableUpgradeable, UUPSUpgradeabl
 
         __Ownable_init(upgradeAdmin);
         __Pausable_init();
+        __ReentrancyGuard_init();
 
         AMMStorage storage $ = _getAMMStorage();
         $.token0 = IERC20(token0_);
@@ -96,6 +137,7 @@ contract ConstantProductAMM is Initializable, OwnableUpgradeable, UUPSUpgradeabl
         $.factory = factory_;
     }
 
+    /// @notice Adds liquidity at the current pool ratio and mints proportional LP shares.
     function addLiquidity(
         uint256 amount0Desired,
         uint256 amount1Desired,
@@ -148,6 +190,7 @@ contract ConstantProductAMM is Initializable, OwnableUpgradeable, UUPSUpgradeabl
         emit LiquidityAdded(msg.sender, to, amount0, amount1, liquidity);
     }
 
+    /// @notice Burns LP shares and returns the proportional token reserves to `to`.
     function removeLiquidity(
         uint256 liquidity,
         uint256 amount0Min,
@@ -178,6 +221,7 @@ contract ConstantProductAMM is Initializable, OwnableUpgradeable, UUPSUpgradeabl
         emit LiquidityRemoved(msg.sender, to, amount0, amount1, liquidity);
     }
 
+    /// @notice Swaps an exact input amount of one pool token for the other pool token.
     function swapExactTokenForToken(
         address tokenIn,
         uint256 amountIn,
@@ -237,12 +281,14 @@ contract ConstantProductAMM is Initializable, OwnableUpgradeable, UUPSUpgradeabl
         emit Swap(msg.sender, address($.token1), address($.token0), amountIn, amountOut, to);
     }
 
+    /// @notice Returns output amount for an exact-input swap after the 0.3% fee.
     function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) public pure returns (uint256) {
         if (amountIn == 0 || reserveIn == 0 || reserveOut == 0) revert InsufficientAmount();
         uint256 amountInWithFee = amountIn * FEE_MULTIPLIER;
         return (amountInWithFee * reserveOut) / ((reserveIn * FEE_DENOMINATOR) + amountInWithFee);
     }
 
+    /// @notice Pure Solidity benchmark implementation of the swap output formula.
     function getAmountOutSolidityBenchmark(uint256 amountIn, uint256 reserveIn, uint256 reserveOut)
         public
         pure
@@ -258,6 +304,7 @@ contract ConstantProductAMM is Initializable, OwnableUpgradeable, UUPSUpgradeabl
         return numerator / denominator;
     }
 
+    /// @notice Assembly benchmark implementation of the swap output formula.
     function getAmountOutYul(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) public pure returns (uint256 out) {
         assembly ("memory-safe") {
             if iszero(and(and(amountIn, reserveIn), reserveOut)) {
@@ -269,34 +316,41 @@ contract ConstantProductAMM is Initializable, OwnableUpgradeable, UUPSUpgradeabl
         }
     }
 
+    /// @notice Quotes the amount of token B equivalent to `amountA` at the current reserve ratio.
     function quote(uint256 amountA, uint256 reserveA, uint256 reserveB) public pure returns (uint256) {
         if (amountA == 0 || reserveA == 0 || reserveB == 0) revert InsufficientAmount();
         return (amountA * reserveB) / reserveA;
     }
 
+    /// @notice Returns the pool token addresses and LP token address.
     function poolTokens() external view returns (address token0_, address token1_, address lpToken_) {
         AMMStorage storage $ = _getAMMStorage();
         return (address($.token0), address($.token1), address($.lpToken));
     }
 
+    /// @notice Returns the latest stored reserves and update timestamp.
     function getReserves() public view returns (uint112 reserve0_, uint112 reserve1_, uint32 blockTimestampLast_) {
         AMMStorage storage $ = _getAMMStorage();
         return ($.reserve0, $.reserve1, $.blockTimestampLast);
     }
 
+    /// @notice Returns the current reserve product.
     function kLast() external view returns (uint256) {
         AMMStorage storage $ = _getAMMStorage();
         return uint256($.reserve0) * $.reserve1;
     }
 
+    /// @notice Returns the factory that deployed this pool.
     function factory() external view returns (address) {
         return _getAMMStorage().factory;
     }
 
+    /// @notice Pauses liquidity and swap operations.
     function pause() external onlyOwner {
         _pause();
     }
 
+    /// @notice Resumes liquidity and swap operations.
     function unpause() external onlyOwner {
         _unpause();
     }

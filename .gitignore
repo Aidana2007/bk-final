@@ -39,3 +39,5 @@ broadcast/
 private-keys/
 
 deployment-*.json
+
+.gas-snapshot
