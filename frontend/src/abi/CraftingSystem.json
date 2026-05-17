@@ -1,0 +1,6 @@
+[
+  { "type": "function", "name": "craft", "stateMutability": "nonpayable", "inputs": [{ "name": "recipeId", "type": "uint256" }], "outputs": [] },
+  { "type": "event", "name": "RecipeCreated", "inputs": [{ "indexed": true, "name": "recipeId", "type": "uint256" }, { "indexed": true, "name": "outputItemId", "type": "uint256" }, { "indexed": false, "name": "outputAmount", "type": "uint256" }] },
+  { "type": "event", "name": "RecipeStatusChanged", "inputs": [{ "indexed": true, "name": "recipeId", "type": "uint256" }, { "indexed": false, "name": "active", "type": "bool" }] },
+  { "type": "event", "name": "Crafted", "inputs": [{ "indexed": true, "name": "player", "type": "address" }, { "indexed": true, "name": "recipeId", "type": "uint256" }, { "indexed": true, "name": "outputItemId", "type": "uint256" }, { "indexed": false, "name": "outputAmount", "type": "uint256" }] }
+]

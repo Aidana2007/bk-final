@@ -1,0 +1,4 @@
+[
+  { "type": "function", "name": "buy", "stateMutability": "payable", "inputs": [{ "name": "listingId", "type": "uint256" }], "outputs": [] },
+  { "type": "function", "name": "cancel", "stateMutability": "nonpayable", "inputs": [{ "name": "listingId", "type": "uint256" }], "outputs": [] }
+]

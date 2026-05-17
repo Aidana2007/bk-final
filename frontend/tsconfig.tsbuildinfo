@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/connectbar.tsx","./src/hooks/usegameactions.ts","./src/web3/addresses.ts","./src/web3/wagmi.ts"],"version":"5.9.3"}

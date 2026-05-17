@@ -41,3 +41,10 @@ private-keys/
 deployment-*.json
 
 .gas-snapshot
+
+node_modules/
+out/
+cache/
+broadcast/
+.env
+frontend/dist/

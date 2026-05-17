@@ -1,18 +1,13 @@
 {
-  "name": "capstone-constant-product-amm",
-  "version": "1.0.0",
+  "name": "game-systems-frontend-infra",
+  "version": "0.1.0",
   "description": "Foundry + OpenZeppelin v5 constant-product AMM capstone protocol module",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
-    "fmt": "forge fmt",
-    "fmt:check": "forge fmt --check",
-    "build": "forge build",
+    "build": "forge build && npm --prefix frontend run build",
     "test": "forge test",
-    "test:fuzz": "forge test --match-contract AMMFuzzTest",
-    "test:invariant": "forge test --match-contract AMMInvariantTest",
-    "coverage": "forge coverage",
-    "gas": "forge snapshot --match-contract AMMGasTest",
-    "slither": "slither . --filter-paths \"node_modules|test|script\""
+    "lint": "npm --prefix frontend run lint",
+    "deploy:op-sepolia": "forge script script/DeployOptimismSepolia.s.sol:DeployOptimismSepolia --rpc-url $OP_SEPOLIA_RPC_URL --broadcast --verify"
   },
   "keywords": [
     "solidity",
@@ -26,13 +21,16 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@chainlink/contracts": "^1.5.0",
+    "@graphprotocol/graph-cli": "^0.98.1",
+    "@graphprotocol/graph-ts": "^0.38.2",
     "@openzeppelin/contracts": "^5.6.1",
     "@openzeppelin/contracts-upgradeable": "^5.6.1",
-    "forge-std": "^1.1.2",
-    "solc": "^0.8.35"
+    "forge-std": "github:foundry-rs/forge-std"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
-  }
+  },
+  "private": true
 }

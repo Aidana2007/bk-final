@@ -1,0 +1,25 @@
+query Inventory($account: Bytes!) {
+  itemBalances(where: { account: $account, balance_gt: 0 }, orderBy: itemId) {
+    itemId
+    balance
+  }
+}
+
+query ActiveRecipes {
+  recipes(where: { active: true }, orderBy: id) {
+    id
+    outputItemId
+    outputAmount
+  }
+}
+
+query LootHistory($player: Bytes!) {
+  lootRequests(where: { player: $player }, orderBy: requestedAt, orderDirection: desc) {
+    id
+    fulfilled
+    itemId
+    amount
+    requestedAt
+    fulfilledAt
+  }
+}

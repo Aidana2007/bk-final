@@ -1,0 +1,46 @@
+type ItemBalance @entity(immutable: false) {
+  id: ID!
+  account: Bytes!
+  itemId: BigInt!
+  balance: BigInt!
+  updatedAt: BigInt!
+}
+
+type ItemTransfer @entity(immutable: true) {
+  id: ID!
+  operator: Bytes!
+  from: Bytes!
+  to: Bytes!
+  itemId: BigInt!
+  amount: BigInt!
+  blockNumber: BigInt!
+  transactionHash: Bytes!
+}
+
+type Recipe @entity(immutable: false) {
+  id: ID!
+  outputItemId: BigInt!
+  outputAmount: BigInt!
+  active: Boolean!
+  createdAt: BigInt!
+}
+
+type Craft @entity(immutable: true) {
+  id: ID!
+  player: Bytes!
+  recipe: Recipe!
+  outputItemId: BigInt!
+  outputAmount: BigInt!
+  blockNumber: BigInt!
+  transactionHash: Bytes!
+}
+
+type LootRequest @entity(immutable: false) {
+  id: ID!
+  player: Bytes!
+  fulfilled: Boolean!
+  itemId: BigInt
+  amount: BigInt
+  requestedAt: BigInt!
+  fulfilledAt: BigInt
+}
