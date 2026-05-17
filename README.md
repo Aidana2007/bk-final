@@ -19,6 +19,10 @@ src/
   AMMLPToken.sol
   ConstantProductAMM.sol
   ConstantProductAMMV2.sol
+  GovernanceToken.sol
+  ProtocolGovernor.sol
+  TreasuryVault.sol
+  RentalVault.sol
   interfaces/
     IAMMLPToken.sol
 test/
@@ -26,10 +30,23 @@ test/
   AMMFuzz.t.sol
   AMMInvariant.t.sol
   AMMGas.t.sol
+  GovernanceLifecycle.t.sol
+  GovernanceDelegation.t.sol
+  TreasuryVaultInvariant.t.sol
+  AccessControlCaseStudy.t.sol
+  RentalVault.t.sol
   mocks/
     MockERC20.sol
+    MockERC721.sol
 script/
   DeployOptimismSepolia.s.sol
+  VerifyGovernanceConfig.s.sol
+docs/
+  governance-architecture.md
+  storage-layout-diagrams.md
+  trust-assumptions.md
+  security-access-control-case-study.md
+  timelock-verification.md
 foundry.toml
 remappings.txt
 ```
@@ -43,6 +60,8 @@ forge build
 forge test
 forge coverage
 forge test --match-contract AMMInvariantTest
+forge test --match-contract GovernanceLifecycleTest
+forge test --match-contract TreasuryVaultInvariantTest
 forge snapshot --match-contract AMMGasTest
 slither . --filter-paths "node_modules|test|script"
 ```
@@ -66,6 +85,8 @@ The deployer address becomes both `upgradeAdmin` and `factoryOwner`. Transfer ow
 `ConstantProductAMM` stores reserves in an ERC-7201-style namespaced storage slot so future upgrades can add storage without colliding with inherited OpenZeppelin state. The pool owner is the configured upgrade admin and must authorize UUPS upgrades.
 
 `AMMLPToken` is a minimal ERC20 receipt token. Only the owning pool can mint or burn LP shares. Initial liquidity locks `MINIMUM_LIQUIDITY` to avoid first-LP share inflation edge cases.
+
+The governance module uses a full OpenZeppelin stack: `GovernanceToken` (`ERC20Votes + Permit`) + `ProtocolGovernor` + `TimelockController` (2-day delay). `TreasuryVault` is an `ERC4626` treasury vault with role-gated management, designed to be controlled by timelock roles after deployment.
 
 ## CREATE2 Salt Scheme
 
