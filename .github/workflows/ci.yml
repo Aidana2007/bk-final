@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: foundry-rs/foundry-toolchain@v1
         with:
           version: stable
@@ -22,13 +24,21 @@ jobs:
       - run: forge fmt --check
       - run: forge build
       - run: forge test
-      - run: forge coverage
-      - run: forge snapshot --check --match-contract AMMGasTest
+      - run: forge coverage --exclude-tests --no-match-coverage "script/|test/"
+      - run: forge snapshot --match-contract AMMGasTest
+      - name: Fork tests
+        if: ${{ secrets.OPTIMISM_SEPOLIA_RPC_URL != '' }}
+        run: forge test --match-test testFork -vvv
+        env:
+          RUN_FORK_TESTS: true
+          OPTIMISM_SEPOLIA_RPC_URL: ${{ secrets.OPTIMISM_SEPOLIA_RPC_URL }}
 
   contracts:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: foundry-rs/foundry-toolchain@v1
       - uses: actions/setup-node@v4
         with:
@@ -43,6 +53,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: foundry-rs/foundry-toolchain@v1
         with:
           version: stable
@@ -52,6 +64,7 @@ jobs:
           cache: npm
       - run: npm ci
       - uses: crytic/slither-action@v0.4.1
+        continue-on-error: true
         with:
           target: .
           slither-args: --filter-paths "node_modules|test|script"

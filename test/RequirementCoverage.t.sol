@@ -630,23 +630,27 @@ contract ForkCoverageTest is Test {
         0x8CE191193D15ea94e11d327b4c7ad8bbE520f6aF;
     address private constant OP_SEPOLIA_ETH_USD_FEED = 0x61Ec26aA57019C486B10502285c5A3D4A4750AD7;
 
+    function _selectForkOrSkip() private {
+        if (!vm.envOr("RUN_FORK_TESTS", false)) {
+            vm.skip(true);
+        }
+        vm.createSelectFork(vm.envString("OPTIMISM_SEPOLIA_RPC_URL"));
+    }
+
     function testForkOptimismSepoliaUSDCMetadata() public {
-        string memory rpcUrl = vm.envString("OPTIMISM_SEPOLIA_RPC_URL");
-        vm.createSelectFork(rpcUrl);
+        _selectForkOrSkip();
         assertGt(IERC20(OP_SEPOLIA_USDC).totalSupply(), 0);
     }
 
     function testForkOptimismSepoliaUniswapFactoryRead() public {
-        string memory rpcUrl = vm.envString("OPTIMISM_SEPOLIA_RPC_URL");
-        vm.createSelectFork(rpcUrl);
+        _selectForkOrSkip();
         IUniswapV3FactoryRead factory = IUniswapV3FactoryRead(OP_SEPOLIA_UNISWAP_V3_FACTORY);
         assertTrue(factory.owner() != address(0));
         assertEq(factory.feeAmountTickSpacing(3000), 60);
     }
 
     function testForkOptimismSepoliaChainlinkFeedRead() public {
-        string memory rpcUrl = vm.envString("OPTIMISM_SEPOLIA_RPC_URL");
-        vm.createSelectFork(rpcUrl);
+        _selectForkOrSkip();
         AggregatorV3Interface feed = AggregatorV3Interface(OP_SEPOLIA_ETH_USD_FEED);
         (, int256 answer,, uint256 updatedAt,) = feed.latestRoundData();
         assertGt(answer, 0);
