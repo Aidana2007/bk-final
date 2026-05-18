@@ -47,10 +47,6 @@ docs/
   trust-assumptions.md
   security-access-control-case-study.md
   timelock-verification.md
-foundry.toml
-remappings.txt
-```
-
 ## Commands
 
 ```bash
