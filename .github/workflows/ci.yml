@@ -27,8 +27,12 @@ jobs:
       - run: forge coverage --exclude-tests --no-match-coverage "script/|test/"
       - run: forge snapshot --match-contract AMMGasTest
       - name: Fork tests
-        if: ${{ secrets.OPTIMISM_SEPOLIA_RPC_URL != '' }}
-        run: forge test --match-test testFork -vvv
+        run: |
+          if [ -z "$OPTIMISM_SEPOLIA_RPC_URL" ]; then
+            echo "Skipping fork tests: OPTIMISM_SEPOLIA_RPC_URL secret is not set."
+            exit 0
+          fi
+          forge test --match-test testFork -vvv
         env:
           RUN_FORK_TESTS: true
           OPTIMISM_SEPOLIA_RPC_URL: ${{ secrets.OPTIMISM_SEPOLIA_RPC_URL }}
