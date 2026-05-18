@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Test} from "forge-std/Test.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Test } from "forge-std/Test.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AMMFactory} from "../src/AMMFactory.sol";
-import {ConstantProductAMM} from "../src/ConstantProductAMM.sol";
-import {MockERC20} from "./mocks/MockERC20.sol";
+import { AMMFactory } from "../src/AMMFactory.sol";
+import { ConstantProductAMM } from "../src/ConstantProductAMM.sol";
+import { MockERC20 } from "./mocks/MockERC20.sol";
 
 contract AMMFuzzTest is Test {
     MockERC20 internal tokenA;
@@ -21,7 +21,8 @@ contract AMMFuzzTest is Test {
         tokenB = new MockERC20("Token B", "TKNB");
         ConstantProductAMM implementation = new ConstantProductAMM();
         AMMFactory factory = new AMMFactory(address(implementation), owner, owner);
-        (address poolAddress, address lpTokenAddress) = factory.createPool(address(tokenA), address(tokenB));
+        (address poolAddress, address lpTokenAddress) =
+            factory.createPool(address(tokenA), address(tokenB));
         pool = ConstantProductAMM(poolAddress);
         lpToken = IERC20(lpTokenAddress);
 
@@ -67,5 +68,26 @@ contract AMMFuzzTest is Test {
         assertGt(out1, 0);
         assertEq(uint256(reserve0), IERC20(poolToken0).balanceOf(address(pool)));
         assertEq(uint256(reserve1), IERC20(poolToken1).balanceOf(address(pool)));
+    }
+
+    function testFuzzSwapSlippageProtection(uint128 rawAmountIn, bool zeroForOne) public {
+        uint256 amountIn = bound(uint256(rawAmountIn), 1 ether, 10_000 ether);
+        address tokenIn = zeroForOne ? address(tokenA) : address(tokenB);
+        (uint112 reserve0, uint112 reserve1,) = pool.getReserves();
+        uint256 expectedOut = zeroForOne
+            ? pool.getAmountOut(amountIn, reserve0, reserve1)
+            : pool.getAmountOut(amountIn, reserve1, reserve0);
+
+        vm.prank(user);
+        vm.expectRevert();
+        pool.swapExactTokenForToken(tokenIn, amountIn, expectedOut + 1, user);
+    }
+
+    function testFuzzQuoteMatchesReserveRatio(uint128 rawAmount) public view {
+        uint256 amount = bound(uint256(rawAmount), 1 ether, 100_000 ether);
+        (uint112 reserve0, uint112 reserve1,) = pool.getReserves();
+
+        assertEq(pool.quote(amount, reserve0, reserve1), amount);
+        assertEq(pool.quote(amount, reserve1, reserve0), amount);
     }
 }

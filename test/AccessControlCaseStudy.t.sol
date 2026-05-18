@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Test} from "forge-std/Test.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Test } from "forge-std/Test.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {MockERC20} from "./mocks/MockERC20.sol";
-import {TreasuryVault} from "../src/TreasuryVault.sol";
+import { MockERC20 } from "./mocks/MockERC20.sol";
+import { TreasuryVault } from "../src/TreasuryVault.sol";
 
 contract InsecureTreasury {
     IERC20 public immutable asset;
@@ -51,7 +51,12 @@ contract AccessControlCaseStudyTest is Test {
 
     function testFix_SecureVaultRejectsUnauthorizedAdminCall() public {
         TreasuryVault secure = new TreasuryVault(
-            asset, "Treasury Vault Share", "tvSHARE", address(this), legitimateRecipient, type(uint256).max
+            asset,
+            "Treasury Vault Share",
+            "tvSHARE",
+            address(this),
+            legitimateRecipient,
+            type(uint256).max
         );
         secure.revokeRole(secure.VAULT_MANAGER_ROLE(), address(this));
 

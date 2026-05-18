@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Test} from "forge-std/Test.sol";
-import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
+import { Test } from "forge-std/Test.sol";
+import { TimelockController } from "@openzeppelin/contracts/governance/TimelockController.sol";
 
-import {GovernanceToken} from "../src/GovernanceToken.sol";
-import {ProtocolGovernor} from "../src/ProtocolGovernor.sol";
+import { GovernanceToken } from "../src/GovernanceToken.sol";
+import { ProtocolGovernor } from "../src/ProtocolGovernor.sol";
 
 contract MockGovTarget {
     uint256 public value;
@@ -28,7 +28,9 @@ contract GovernanceDelegationTest is Test {
     uint256 internal constant INITIAL_SUPPLY = 1_000_000 ether;
 
     function setUp() public {
-        govToken = new GovernanceToken("Governance Token", "GOV", INITIAL_SUPPLY, address(this), address(this));
+        govToken = new GovernanceToken(
+            "Governance Token", "GOV", INITIAL_SUPPLY, address(this), address(this)
+        );
         target = new MockGovTarget();
 
         govToken.transfer(proposer, 120_000 ether);
@@ -99,5 +101,22 @@ contract GovernanceDelegationTest is Test {
 
         (, uint256 forVotes,) = governor.proposalVotes(proposalId);
         assertEq(forVotes, expectedWeight);
+    }
+
+    function testFuzzDelegatedVotingPowerTracksBalance(uint96 rawAmount) public {
+        uint256 amount = bound(uint256(rawAmount), 1 ether, 50_000 ether);
+        address delegatee = address(0xD1E6A7E);
+
+        govToken.transfer(delegatee, amount);
+        vm.prank(delegatee);
+        govToken.delegate(delegatee);
+
+        assertEq(govToken.getVotes(delegatee), amount);
+    }
+
+    function testFuzzProposalThresholdIsOnePercent(uint128 rawSupply) public view {
+        uint256 supply = bound(uint256(rawSupply), 100 ether, type(uint128).max);
+
+        assertEq(governor.thresholdFromSupply(supply), supply / 100);
     }
 }

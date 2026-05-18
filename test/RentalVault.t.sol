@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Test} from "forge-std/Test.sol";
+import { Test } from "forge-std/Test.sol";
 
-import {MockERC20} from "./mocks/MockERC20.sol";
-import {MockERC721} from "./mocks/MockERC721.sol";
-import {RentalVault} from "../src/RentalVault.sol";
+import { MockERC20 } from "./mocks/MockERC20.sol";
+import { MockERC721 } from "./mocks/MockERC721.sol";
+import { RentalVault } from "../src/RentalVault.sol";
 
 contract RentalVaultTest is Test {
     MockERC20 internal paymentToken;
@@ -40,8 +40,9 @@ contract RentalVaultTest is Test {
         uint64 endTs = uint64(block.timestamp + 1 days);
 
         vm.prank(lender);
-        bytes32 offerId =
-            rentalVault.createOffer(gameItem, tokenId, renter, startTs, endTs, 1_000 ether, 200 ether);
+        bytes32 offerId = rentalVault.createOffer(
+            gameItem, tokenId, renter, startTs, endTs, 1_000 ether, 200 ether
+        );
 
         vm.prank(renter);
         rentalVault.acceptOffer(offerId);
@@ -58,7 +59,9 @@ contract RentalVaultTest is Test {
         // 5% of 200 = 10 fee, lender gets 190 rent + collateral flow back to renter.
         assertEq(paymentToken.balanceOf(feeRecipient), 10 ether);
         assertEq(paymentToken.balanceOf(lender), 190 ether);
-        assertEq(paymentToken.balanceOf(renter), 10_000 ether - 200 ether - 1_000 ether + 1_000 ether);
+        assertEq(
+            paymentToken.balanceOf(renter), 10_000 ether - 200 ether - 1_000 ether + 1_000 ether
+        );
         assertEq(gameItem.ownerOf(tokenId), lender);
     }
 
@@ -67,7 +70,8 @@ contract RentalVaultTest is Test {
         uint64 endTs = uint64(block.timestamp + 1 days);
 
         vm.prank(lender);
-        bytes32 offerId = rentalVault.createOffer(gameItem, tokenId, renter, startTs, endTs, 100 ether, 50 ether);
+        bytes32 offerId =
+            rentalVault.createOffer(gameItem, tokenId, renter, startTs, endTs, 100 ether, 50 ether);
 
         vm.prank(address(0xCAFE));
         vm.expectRevert();

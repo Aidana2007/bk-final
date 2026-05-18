@@ -121,3 +121,9 @@ The predicted pool address depends on the predicted LP token address because the
 - Yul benchmark: local `solc` estimates show `getAmountOutYul` at 703 gas vs 837 gas for the Solidity benchmark wrapper. A real `.gas-snapshot` is generated with `forge snapshot` once Foundry is available.
 - CI/CD: GitHub Actions runs format, build, tests, coverage, gas snapshot check, and Slither.
 - Code comments: NatSpec is included on the public contract surface for checklist/readiness review.
+- Local verification: Foundry `v1.7.1` installed; `forge fmt --check`, `forge build`, `forge test`, `forge coverage`, and the AMM gas snapshot have been run.
+- Current full test result: 134 passing Solidity tests, 0 failing tests, and 0 skipped tests.
+- Current fork test result: 3 passing Optimism Sepolia fork tests, 0 failing tests, and 0 skipped tests when `OPTIMISM_SEPOLIA_RPC_URL` is configured.
+- Coverage: 92.63% source line coverage; see `docs/coverage-report.md`.
+- Gas report: current AMM formula benchmark is documented in `docs/gas-report.md`.
+- Security report: local Slither detector execution is documented in `docs/slither-report.md`; the run is blocked by a local `crytic-compile`/Foundry build-info parsing issue.

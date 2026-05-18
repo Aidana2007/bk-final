@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {VRFConsumerBaseV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
-import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
-import {IGameItems} from "./interfaces/IGameItems.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {
+    VRFConsumerBaseV2Plus
+} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
+import {
+    VRFV2PlusClient
+} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
+import { IGameItems } from "./interfaces/IGameItems.sol";
 
 contract VRFLootDrop is VRFConsumerBaseV2Plus, AccessControl, ReentrancyGuard {
     bytes32 public constant LOOT_MANAGER_ROLE = keccak256("LOOT_MANAGER_ROLE");
@@ -34,7 +38,9 @@ contract VRFLootDrop is VRFConsumerBaseV2Plus, AccessControl, ReentrancyGuard {
 
     event LootTableUpdated(uint256 entries, uint32 totalWeight);
     event LootRequested(uint256 indexed requestId, address indexed player);
-    event LootDelivered(uint256 indexed requestId, address indexed player, uint256 indexed itemId, uint256 amount);
+    event LootDelivered(
+        uint256 indexed requestId, address indexed player, uint256 indexed itemId, uint256 amount
+    );
 
     constructor(
         IGameItems gameItems_,
@@ -66,7 +72,10 @@ contract VRFLootDrop is VRFConsumerBaseV2Plus, AccessControl, ReentrancyGuard {
 
         for (uint256 i = 0; i < entries.length; i++) {
             require(entries[i].weight > 0, "Loot: zero weight");
-            require(entries[i].minAmount > 0 && entries[i].maxAmount >= entries[i].minAmount, "Loot: bad amount");
+            require(
+                entries[i].minAmount > 0 && entries[i].maxAmount >= entries[i].minAmount,
+                "Loot: bad amount"
+            );
             lootTable.push(entries[i]);
             newTotalWeight += entries[i].weight;
         }
@@ -84,14 +93,19 @@ contract VRFLootDrop is VRFConsumerBaseV2Plus, AccessControl, ReentrancyGuard {
                 requestConfirmations: requestConfirmations,
                 callbackGasLimit: callbackGasLimit,
                 numWords: 1,
-                extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: false}))
+                extraArgs: VRFV2PlusClient._argsToBytes(
+                    VRFV2PlusClient.ExtraArgsV1({ nativePayment: false })
+                )
             })
         );
-        requests[requestId] = RequestStatus({player: msg.sender, fulfilled: false});
+        requests[requestId] = RequestStatus({ player: msg.sender, fulfilled: false });
         emit LootRequested(requestId, msg.sender);
     }
 
-    function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
+    function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords)
+        internal
+        override
+    {
         RequestStatus storage request = requests[requestId];
         require(request.player != address(0), "Loot: unknown request");
         require(!request.fulfilled, "Loot: fulfilled");

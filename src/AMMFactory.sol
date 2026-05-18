@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-import {AMMLPToken} from "./AMMLPToken.sol";
-import {ConstantProductAMM} from "./ConstantProductAMM.sol";
+import { AMMLPToken } from "./AMMLPToken.sol";
+import { ConstantProductAMM } from "./ConstantProductAMM.sol";
 
 /// @notice Deploys and indexes AMM pools for token pairs using CREATE or CREATE2.
 contract AMMFactory is Ownable {
@@ -45,7 +45,11 @@ contract AMMFactory is Ownable {
     }
 
     /// @notice Deploys a pool for `tokenA` and `tokenB` with standard CREATE.
-    function createPool(address tokenA, address tokenB) external onlyOwner returns (address pool, address lpToken) {
+    function createPool(address tokenA, address tokenB)
+        external
+        onlyOwner
+        returns (address pool, address lpToken)
+    {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
         if (getPool[token0][token1] != address(0)) revert PoolExists(getPool[token0][token1]);
 
@@ -57,41 +61,50 @@ contract AMMFactory is Ownable {
     }
 
     /// @notice Deploys a pool for `tokenA` and `tokenB` with deterministic CREATE2 salts.
-    function createPoolDeterministic(
-        address tokenA,
-        address tokenB,
-        bytes32 salt
-    ) external onlyOwner returns (address pool, address lpToken) {
+    function createPoolDeterministic(address tokenA, address tokenB, bytes32 salt)
+        external
+        onlyOwner
+        returns (address pool, address lpToken)
+    {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
         if (getPool[token0][token1] != address(0)) revert PoolExists(getPool[token0][token1]);
 
         bytes32 lpSalt = _lpSalt(token0, token1, salt);
         bytes32 proxySalt = _proxySalt(token0, token1, salt);
-        lpToken = address(new AMMLPToken{salt: lpSalt}(LP_TOKEN_NAME, LP_TOKEN_SYMBOL, address(this)));
-        pool = address(new ERC1967Proxy{salt: proxySalt}(implementation, _initData(token0, token1, lpToken)));
+        lpToken =
+            address(new AMMLPToken{ salt: lpSalt }(LP_TOKEN_NAME, LP_TOKEN_SYMBOL, address(this)));
+        pool = address(
+            new ERC1967Proxy{ salt: proxySalt }(implementation, _initData(token0, token1, lpToken))
+        );
         AMMLPToken(lpToken).transferOwnership(pool);
 
         _register(token0, token1, pool, lpToken, salt, true);
     }
 
     /// @notice Predicts the CREATE2 pool and LP token addresses for a sorted pair and public salt.
-    function predictDeterministicPool(
-        address tokenA,
-        address tokenB,
-        bytes32 salt
-    ) external view returns (address predictedPool, address predictedLPToken) {
+    function predictDeterministicPool(address tokenA, address tokenB, bytes32 salt)
+        external
+        view
+        returns (address predictedPool, address predictedLPToken)
+    {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
         predictedLPToken = Create2.computeAddress(
             _lpSalt(token0, token1, salt),
             keccak256(
                 abi.encodePacked(
-                    type(AMMLPToken).creationCode, abi.encode(LP_TOKEN_NAME, LP_TOKEN_SYMBOL, address(this))
+                    type(AMMLPToken).creationCode,
+                    abi.encode(LP_TOKEN_NAME, LP_TOKEN_SYMBOL, address(this))
                 )
             )
         );
         predictedPool = Create2.computeAddress(
             _proxySalt(token0, token1, salt),
-            keccak256(abi.encodePacked(type(ERC1967Proxy).creationCode, abi.encode(implementation, _initData(token0, token1, predictedLPToken))))
+            keccak256(
+                abi.encodePacked(
+                    type(ERC1967Proxy).creationCode,
+                    abi.encode(implementation, _initData(token0, token1, predictedLPToken))
+                )
+            )
         );
     }
 
@@ -101,7 +114,11 @@ contract AMMFactory is Ownable {
     }
 
     /// @notice Sorts two token addresses so each pair has one canonical storage key.
-    function sortTokens(address tokenA, address tokenB) public pure returns (address token0, address token1) {
+    function sortTokens(address tokenA, address tokenB)
+        public
+        pure
+        returns (address token0, address token1)
+    {
         if (tokenA == address(0) || tokenB == address(0)) revert ZeroAddress();
         if (tokenA == tokenB) revert IdenticalTokens();
         (token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
@@ -121,15 +138,25 @@ contract AMMFactory is Ownable {
         emit PoolCreated(token0, token1, pool, lpToken, salt, deterministic);
     }
 
-    function _initData(address token0, address token1, address lpToken) private view returns (bytes memory) {
-        return abi.encodeCall(ConstantProductAMM.initialize, (upgradeAdmin, token0, token1, lpToken, address(this)));
+    function _initData(address token0, address token1, address lpToken)
+        private
+        view
+        returns (bytes memory)
+    {
+        return abi.encodeCall(
+            ConstantProductAMM.initialize, (upgradeAdmin, token0, token1, lpToken, address(this))
+        );
     }
 
     function _lpSalt(address token0, address token1, bytes32 salt) private pure returns (bytes32) {
         return keccak256(abi.encodePacked(LP_SALT_DOMAIN, token0, token1, salt));
     }
 
-    function _proxySalt(address token0, address token1, bytes32 salt) private pure returns (bytes32) {
+    function _proxySalt(address token0, address token1, bytes32 salt)
+        private
+        pure
+        returns (bytes32)
+    {
         return keccak256(abi.encodePacked(POOL_SALT_DOMAIN, token0, token1, salt));
     }
 }

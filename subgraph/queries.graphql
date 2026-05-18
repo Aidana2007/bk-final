@@ -23,3 +23,28 @@ query LootHistory($player: Bytes!) {
     fulfilledAt
   }
 }
+
+query RecentTransfers {
+  itemTransfers(orderBy: blockNumber, orderDirection: desc, first: 25) {
+    id
+    operator
+    from
+    to
+    itemId
+    amount
+    transactionHash
+  }
+}
+
+query RecentCrafts {
+  crafts(orderBy: blockNumber, orderDirection: desc, first: 25) {
+    id
+    player
+    recipe {
+      id
+      outputItemId
+      outputAmount
+    }
+    transactionHash
+  }
+}

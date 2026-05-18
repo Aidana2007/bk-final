@@ -1,14 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
-import {GovernorSettings} from "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
-import {GovernorCountingSimple} from "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
-import {GovernorVotes} from "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
-import {GovernorVotesQuorumFraction} from "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
-import {GovernorTimelockControl} from "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
-import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
-import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
+import { Governor } from "@openzeppelin/contracts/governance/Governor.sol";
+import {
+    GovernorSettings
+} from "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
+import {
+    GovernorCountingSimple
+} from "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
+import { GovernorVotes } from "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
+import {
+    GovernorVotesQuorumFraction
+} from "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
+import {
+    GovernorTimelockControl
+} from "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
+import { IVotes } from "@openzeppelin/contracts/governance/utils/IVotes.sol";
+import { TimelockController } from "@openzeppelin/contracts/governance/TimelockController.sol";
 
 /// @notice OpenZeppelin governance stack configured to the capstone spec.
 contract ProtocolGovernor is
@@ -35,7 +43,9 @@ contract ProtocolGovernor is
         GovernorVotesQuorumFraction(GOVERNANCE_QUORUM_FRACTION)
         GovernorTimelockControl(timelock_)
     {
-        if (proposalThreshold_ == 0) revert InvalidProposalThreshold();
+        if (proposalThreshold_ == 0) {
+            revert InvalidProposalThreshold();
+        }
     }
 
     /// @notice Helper to compute the 1% threshold from a known token supply.
@@ -51,15 +61,30 @@ contract ProtocolGovernor is
         return super.votingPeriod();
     }
 
-    function quorum(uint256 timepoint) public view override(Governor, GovernorVotesQuorumFraction) returns (uint256) {
+    function quorum(uint256 timepoint)
+        public
+        view
+        override(Governor, GovernorVotesQuorumFraction)
+        returns (uint256)
+    {
         return super.quorum(timepoint);
     }
 
-    function proposalThreshold() public view override(Governor, GovernorSettings) returns (uint256) {
+    function proposalThreshold()
+        public
+        view
+        override(Governor, GovernorSettings)
+        returns (uint256)
+    {
         return super.proposalThreshold();
     }
 
-    function state(uint256 proposalId) public view override(Governor, GovernorTimelockControl) returns (ProposalState) {
+    function state(uint256 proposalId)
+        public
+        view
+        override(Governor, GovernorTimelockControl)
+        returns (ProposalState)
+    {
         return super.state(proposalId);
     }
 
@@ -101,7 +126,12 @@ contract ProtocolGovernor is
         return super._cancel(targets, values, calldatas, descriptionHash);
     }
 
-    function _executor() internal view override(Governor, GovernorTimelockControl) returns (address) {
+    function _executor()
+        internal
+        view
+        override(Governor, GovernorTimelockControl)
+        returns (address)
+    {
         return super._executor();
     }
 }

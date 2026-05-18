@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Test} from "forge-std/Test.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Test } from "forge-std/Test.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AMMFactory} from "../src/AMMFactory.sol";
-import {ConstantProductAMM} from "../src/ConstantProductAMM.sol";
-import {MockERC20} from "./mocks/MockERC20.sol";
+import { AMMFactory } from "../src/AMMFactory.sol";
+import { ConstantProductAMM } from "../src/ConstantProductAMM.sol";
+import { MockERC20 } from "./mocks/MockERC20.sol";
 
 contract AMMHandler is Test {
     MockERC20 public tokenA;
@@ -53,11 +53,13 @@ contract AMMInvariantTest is Test {
         tokenB = new MockERC20("Token B", "TKNB");
         ConstantProductAMM implementation = new ConstantProductAMM();
         AMMFactory factory = new AMMFactory(address(implementation), address(this), address(this));
-        (address poolAddress, address lpTokenAddress) = factory.createPool(address(tokenA), address(tokenB));
+        (address poolAddress, address lpTokenAddress) =
+            factory.createPool(address(tokenA), address(tokenB));
         pool = ConstantProductAMM(poolAddress);
         lpToken = IERC20(lpTokenAddress);
 
         handler = new AMMHandler(tokenA, tokenB, pool);
+        targetContract(address(handler));
     }
 
     function swapAForB(uint128 rawAmountIn) public {
@@ -83,7 +85,14 @@ contract AMMInvariantTest is Test {
     function invariant_TotalLPAccountingValid() public {
         assertEq(
             lpToken.totalSupply(),
-            lpToken.balanceOf(address(handler)) + lpToken.balanceOf(pool.MINIMUM_LIQUIDITY_RECIPIENT())
+            lpToken.balanceOf(address(handler))
+                + lpToken.balanceOf(pool.MINIMUM_LIQUIDITY_RECIPIENT())
         );
+    }
+
+    function invariant_KLastMatchesReserveProduct() public {
+        (uint112 reserve0, uint112 reserve1,) = pool.getReserves();
+
+        assertEq(pool.kLast(), uint256(reserve0) * uint256(reserve1));
     }
 }

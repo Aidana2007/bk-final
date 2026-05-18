@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { IERC721Receiver } from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /// @notice NFT rental escrow with role-gated settlement and collateral handling.
 contract RentalVault is AccessControl, IERC721Receiver, Pausable, ReentrancyGuard {
@@ -60,11 +60,21 @@ contract RentalVault is AccessControl, IERC721Receiver, Pausable, ReentrancyGuar
     );
     event RentalOfferAccepted(bytes32 indexed offerId, address indexed renter);
     event RentalOfferSettled(bytes32 indexed offerId, bool defaulted);
-    event FeeConfigUpdated(uint16 oldFeeBps, uint16 newFeeBps, address oldRecipient, address newRecipient);
+    event FeeConfigUpdated(
+        uint16 oldFeeBps, uint16 newFeeBps, address oldRecipient, address newRecipient
+    );
 
     /// @notice Creates a rental vault for ERC721 assets settled in `paymentToken_`.
-    constructor(IERC20 paymentToken_, address admin, address feeRecipient_, uint16 protocolFeeBps_) {
-        if (address(paymentToken_) == address(0) || admin == address(0) || feeRecipient_ == address(0)) {
+    constructor(
+        IERC20 paymentToken_,
+        address admin,
+        address feeRecipient_,
+        uint16 protocolFeeBps_
+    ) {
+        if (
+            address(paymentToken_) == address(0) || admin == address(0)
+                || feeRecipient_ == address(0)
+        ) {
             revert ZeroAddress();
         }
         if (protocolFeeBps_ > BPS) revert InvalidFeeBps();
@@ -88,8 +98,12 @@ contract RentalVault is AccessControl, IERC721Receiver, Pausable, ReentrancyGuar
         uint256 collateralAmount,
         uint256 rentAmount
     ) external whenNotPaused nonReentrant returns (bytes32 offerId) {
-        if (address(nft) == address(0) || renter == address(0)) revert ZeroAddress();
-        if (endTimestamp <= startTimestamp || startTimestamp < block.timestamp) revert InvalidTimeWindow();
+        if (address(nft) == address(0) || renter == address(0)) {
+            revert ZeroAddress();
+        }
+        if (endTimestamp <= startTimestamp || startTimestamp < block.timestamp) {
+            revert InvalidTimeWindow();
+        }
 
         offerId = keccak256(abi.encode(msg.sender, address(nft), tokenId, renter, offerNonce++));
         RentalOffer storage offer = offers[offerId];
@@ -135,7 +149,11 @@ contract RentalVault is AccessControl, IERC721Receiver, Pausable, ReentrancyGuar
     }
 
     /// @notice Settles the rental after end time; default keeps collateral with lender.
-    function settleOffer(bytes32 offerId, bool defaulted) external onlyRole(LISTING_MANAGER_ROLE) nonReentrant {
+    function settleOffer(bytes32 offerId, bool defaulted)
+        external
+        onlyRole(LISTING_MANAGER_ROLE)
+        nonReentrant
+    {
         RentalOffer storage offer = offers[offerId];
         if (!offer.accepted) revert OfferNotAccepted();
         if (offer.settled) revert OfferAlreadySettled();
@@ -157,7 +175,10 @@ contract RentalVault is AccessControl, IERC721Receiver, Pausable, ReentrancyGuar
     }
 
     /// @notice Updates protocol fee basis points and recipient.
-    function setFeeConfig(uint16 newFeeBps, address newFeeRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setFeeConfig(uint16 newFeeBps, address newFeeRecipient)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         if (newFeeBps > BPS) revert InvalidFeeBps();
         if (newFeeRecipient == address(0)) revert ZeroAddress();
 
@@ -179,7 +200,11 @@ contract RentalVault is AccessControl, IERC721Receiver, Pausable, ReentrancyGuar
         _unpause();
     }
 
-    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata)
+        external
+        pure
+        returns (bytes4)
+    {
         return IERC721Receiver.onERC721Received.selector;
     }
 }

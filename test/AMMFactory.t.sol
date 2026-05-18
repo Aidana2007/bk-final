@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Test} from "forge-std/Test.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Test } from "forge-std/Test.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AMMFactory} from "../src/AMMFactory.sol";
-import {AMMLPToken} from "../src/AMMLPToken.sol";
-import {ConstantProductAMM} from "../src/ConstantProductAMM.sol";
-import {ConstantProductAMMV2} from "../src/ConstantProductAMMV2.sol";
-import {MockERC20} from "./mocks/MockERC20.sol";
+import { AMMFactory } from "../src/AMMFactory.sol";
+import { AMMLPToken } from "../src/AMMLPToken.sol";
+import { ConstantProductAMM } from "../src/ConstantProductAMM.sol";
+import { ConstantProductAMMV2 } from "../src/ConstantProductAMMV2.sol";
+import { MockERC20 } from "./mocks/MockERC20.sol";
 
 contract AMMFactoryTest is Test {
     MockERC20 internal tokenA;
@@ -46,7 +46,8 @@ contract AMMFactoryTest is Test {
             factory.predictDeterministicPool(address(tokenA), address(tokenB), salt);
 
         vm.prank(owner);
-        (address pool, address lpToken) = factory.createPoolDeterministic(address(tokenA), address(tokenB), salt);
+        (address pool, address lpToken) =
+            factory.createPoolDeterministic(address(tokenA), address(tokenB), salt);
 
         assertEq(pool, predictedPool);
         assertEq(lpToken, predictedLP);
@@ -79,7 +80,8 @@ contract ConstantProductAMMTest is Test {
         factory = new AMMFactory(address(implementation), owner, owner);
 
         vm.prank(owner);
-        (address poolAddress, address lpTokenAddress) = factory.createPool(address(tokenA), address(tokenB));
+        (address poolAddress, address lpTokenAddress) =
+            factory.createPool(address(tokenA), address(tokenB));
         pool = ConstantProductAMM(poolAddress);
         lpToken = IERC20(lpTokenAddress);
 
@@ -108,7 +110,8 @@ contract ConstantProductAMMTest is Test {
     function testAddLiquidityUsesOptimalRatio() public {
         vm.startPrank(user);
         pool.addLiquidity(100 ether, 200 ether, 100 ether, 200 ether, user);
-        (uint256 amount0, uint256 amount1,) = pool.addLiquidity(50 ether, 150 ether, 50 ether, 100 ether, user);
+        (uint256 amount0, uint256 amount1,) =
+            pool.addLiquidity(50 ether, 150 ether, 50 ether, 100 ether, user);
         vm.stopPrank();
 
         assertEq(amount0, 50 ether);
@@ -141,7 +144,8 @@ contract ConstantProductAMMTest is Test {
         uint256 amountIn = 10 ether;
         uint256 reserveIn = 1_000 ether;
         uint256 reserveOut = 1_000 ether;
-        uint256 expected = (amountIn * 9_970 * reserveOut) / ((reserveIn * 10_000) + (amountIn * 9_970));
+        uint256 expected =
+            (amountIn * 9_970 * reserveOut) / ((reserveIn * 10_000) + (amountIn * 9_970));
 
         assertEq(pool.getAmountOut(amountIn, reserveIn, reserveOut), expected);
     }

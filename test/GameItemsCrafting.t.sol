@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Test} from "forge-std/Test.sol";
-import {CraftingSystem} from "../src/CraftingSystem.sol";
-import {GameItems} from "../src/GameItems.sol";
-import {IGameItems} from "../src/interfaces/IGameItems.sol";
+import { Test } from "forge-std/Test.sol";
+import { CraftingSystem } from "../src/CraftingSystem.sol";
+import { GameItems } from "../src/GameItems.sol";
+import { IGameItems } from "../src/interfaces/IGameItems.sol";
 
 contract GameItemsCraftingTest is Test {
     GameItems internal items;
@@ -21,8 +21,8 @@ contract GameItemsCraftingTest is Test {
 
     function testCraftBurnsIngredientsAndMintsOutput() public {
         CraftingSystem.Ingredient[] memory ingredients = new CraftingSystem.Ingredient[](2);
-        ingredients[0] = CraftingSystem.Ingredient({itemId: 1, amount: 2});
-        ingredients[1] = CraftingSystem.Ingredient({itemId: 2, amount: 1});
+        ingredients[0] = CraftingSystem.Ingredient({ itemId: 1, amount: 2 });
+        ingredients[1] = CraftingSystem.Ingredient({ itemId: 2, amount: 1 });
         uint256 recipeId = crafting.createRecipe(10, 1, ingredients);
 
         vm.startPrank(player);

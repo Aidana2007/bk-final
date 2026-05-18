@@ -1,0 +1,32 @@
+[
+  {
+    "type": "event",
+    "name": "RecipeCreated",
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "name": "recipeId", "type": "uint256" },
+      { "indexed": true, "name": "outputItemId", "type": "uint256" },
+      { "indexed": false, "name": "outputAmount", "type": "uint256" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "RecipeStatusChanged",
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "name": "recipeId", "type": "uint256" },
+      { "indexed": false, "name": "active", "type": "bool" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "Crafted",
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "name": "player", "type": "address" },
+      { "indexed": true, "name": "recipeId", "type": "uint256" },
+      { "indexed": true, "name": "outputItemId", "type": "uint256" },
+      { "indexed": false, "name": "outputAmount", "type": "uint256" }
+    ]
+  }
+]

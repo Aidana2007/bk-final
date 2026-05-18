@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @notice Governance-controlled ERC4626 treasury vault with role-gated admin actions.
 contract TreasuryVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
@@ -34,7 +34,9 @@ contract TreasuryVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
         address treasuryRecipient_,
         uint256 depositCap_
     ) ERC20(name_, symbol_) ERC4626(asset_) {
-        if (admin == address(0) || treasuryRecipient_ == address(0)) revert ZeroAddress();
+        if (admin == address(0) || treasuryRecipient_ == address(0)) {
+            revert ZeroAddress();
+        }
 
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(VAULT_MANAGER_ROLE, admin);

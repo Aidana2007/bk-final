@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Test} from "forge-std/Test.sol";
-import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
-import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
+import { Test } from "forge-std/Test.sol";
+import { IGovernor } from "@openzeppelin/contracts/governance/IGovernor.sol";
+import { TimelockController } from "@openzeppelin/contracts/governance/TimelockController.sol";
 
-import {GovernanceToken} from "../src/GovernanceToken.sol";
-import {ProtocolGovernor} from "../src/ProtocolGovernor.sol";
-import {TreasuryVault} from "../src/TreasuryVault.sol";
-import {MockERC20} from "./mocks/MockERC20.sol";
+import { GovernanceToken } from "../src/GovernanceToken.sol";
+import { ProtocolGovernor } from "../src/ProtocolGovernor.sol";
+import { TreasuryVault } from "../src/TreasuryVault.sol";
+import { MockERC20 } from "./mocks/MockERC20.sol";
 
 contract GovernanceLifecycleTest is Test {
     GovernanceToken internal govToken;
@@ -27,7 +27,9 @@ contract GovernanceLifecycleTest is Test {
 
     function setUp() public {
         usdc = new MockERC20("Mock USDC", "mUSDC");
-        govToken = new GovernanceToken("Governance Token", "GOV", INITIAL_SUPPLY, address(this), address(this));
+        govToken = new GovernanceToken(
+            "Governance Token", "GOV", INITIAL_SUPPLY, address(this), address(this)
+        );
 
         // Distribute voting power and self-delegate.
         govToken.transfer(alice, 120_000 ether);
@@ -52,7 +54,12 @@ contract GovernanceLifecycleTest is Test {
         timelock.grantRole(timelock.EXECUTOR_ROLE(), address(0));
 
         treasuryVault = new TreasuryVault(
-            usdc, "Treasury Vault Share", "tvSHARE", address(this), treasuryRecipient, type(uint256).max
+            usdc,
+            "Treasury Vault Share",
+            "tvSHARE",
+            address(this),
+            treasuryRecipient,
+            type(uint256).max
         );
         treasuryVault.grantRole(treasuryVault.VAULT_MANAGER_ROLE(), address(timelock));
         treasuryVault.revokeRole(treasuryVault.VAULT_MANAGER_ROLE(), address(this));

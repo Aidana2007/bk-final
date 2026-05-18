@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Abi, Address, parseEther, parseUnits } from "viem";
-import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import ammAbi from "../abi/AMM.json";
 import craftingAbi from "../abi/CraftingSystem.json";
 import gameItemsAbi from "../abi/GameItems.json";
@@ -9,16 +9,45 @@ import lootAbi from "../abi/VRFLootDrop.json";
 import marketplaceAbi from "../abi/Marketplace.json";
 import { contracts } from "../web3/addresses";
 
+const erc20Abi = [
+  {
+    type: "function",
+    name: "approve",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+] as const;
+
+function readableError(message?: string) {
+  if (!message) return undefined;
+  const lower = message.toLowerCase();
+  if (lower.includes("user rejected") || lower.includes("user denied")) {
+    return "Transaction rejected in wallet.";
+  }
+  if (lower.includes("insufficient funds") || lower.includes("exceeds balance")) {
+    return "Insufficient balance for this transaction.";
+  }
+  if (lower.includes("chain") || lower.includes("network")) {
+    return "Wallet is connected to the wrong network.";
+  }
+  return message.split("\n")[0];
+}
+
 export function useTransactionState(hash?: `0x${string}`) {
   const receipt = useWaitForTransactionReceipt({ hash });
   return {
     isPending: Boolean(hash && receipt.isLoading),
     isConfirmed: receipt.isSuccess,
-    error: receipt.error?.message,
+    error: readableError(receipt.error?.message),
   };
 }
 
 export function useGameActions() {
+  const { address } = useAccount();
   const writer = useWriteContract();
   const tx = useTransactionState(writer.data);
 
@@ -28,7 +57,14 @@ export function useGameActions() {
       isWriting: writer.isPending,
       isPending: tx.isPending,
       isConfirmed: tx.isConfirmed,
-      error: writer.error?.message ?? tx.error,
+      error: readableError(writer.error?.message) ?? tx.error,
+      approveTokenForAmm: (token: Address, amount: string) =>
+        writer.writeContract({
+          address: token,
+          abi: erc20Abi,
+          functionName: "approve",
+          args: [contracts.amm, parseUnits(amount, 18)],
+        }),
       approveCrafting: () =>
         writer.writeContract({
           address: contracts.gameItems,
@@ -56,13 +92,15 @@ export function useGameActions() {
           functionName: "castVote",
           args: [proposalId, support],
         }),
-      swap: (tokenIn: Address, amountIn: string, minAmountOut: string) =>
+      swap: (tokenIn: Address, amountIn: string, minAmountOut: string) => {
+        if (!address) return;
         writer.writeContract({
           address: contracts.amm,
           abi: ammAbi as Abi,
-          functionName: "swap",
-          args: [tokenIn, parseUnits(amountIn, 18), parseUnits(minAmountOut, 18)],
-        }),
+          functionName: "swapExactTokenForToken",
+          args: [tokenIn, parseUnits(amountIn, 18), parseUnits(minAmountOut, 18), address],
+        });
+      },
       buyListing: (listingId: bigint, priceEth: string) =>
         writer.writeContract({
           address: contracts.marketplace,
@@ -72,6 +110,6 @@ export function useGameActions() {
           value: parseEther(priceEth),
         }),
     }),
-    [tx.error, tx.isConfirmed, tx.isPending, writer]
+    [address, tx.error, tx.isConfirmed, tx.isPending, writer]
   );
 }
