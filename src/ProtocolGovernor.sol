@@ -27,8 +27,8 @@ contract ProtocolGovernor is
     GovernorVotesQuorumFraction,
     GovernorTimelockControl
 {
-    uint48 public constant GOVERNANCE_VOTING_DELAY = 1 days;
-    uint32 public constant GOVERNANCE_VOTING_PERIOD = 1 weeks;
+    uint48 public constant GOVERNANCE_VOTING_DELAY = 1 minutes;
+    uint32 public constant GOVERNANCE_VOTING_PERIOD = 1 days;
     uint256 public constant GOVERNANCE_QUORUM_FRACTION = 4;
     uint256 public constant BASIS_POINTS_DENOMINATOR = 10_000;
     uint256 public constant PROPOSAL_THRESHOLD_BPS = 100;

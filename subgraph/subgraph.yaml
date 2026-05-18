@@ -56,9 +56,9 @@ dataSources:
     name: VRFLootDrop
     network: optimism-sepolia
     source:
-      address: "0xc7bb65ab7baeaade8105a304239b19bc0359c901"
+      address: "0xffb3abb1be3d9edb37c2dbbf6ac8bf0aa86637b4"
       abi: VRFLootDrop
-      startBlock: 43634036
+      startBlock: 43651170
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

@@ -66,8 +66,8 @@ contract GovernanceLifecycleTest is Test {
     }
 
     function testGovernanceConfigMatchesSpec() public {
-        assertEq(governor.votingDelay(), 1 days);
-        assertEq(governor.votingPeriod(), 1 weeks);
+        assertEq(governor.votingDelay(), 1 minutes);
+        assertEq(governor.votingPeriod(), 1 days);
         assertEq(governor.quorumNumerator(), 4);
         assertEq(timelock.getMinDelay(), 2 days);
     }

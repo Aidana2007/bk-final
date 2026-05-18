@@ -34,6 +34,21 @@ function readableError(message?: string) {
   if (lower.includes("chain") || lower.includes("network")) {
     return "Wallet is connected to the wrong network.";
   }
+  if (lower.includes("listinginactive") || lower.includes("0xd18cffc8")) {
+    return "That marketplace listing is not active.";
+  }
+  if (lower.includes("incorrectpayment") || lower.includes("0x0d35e921")) {
+    return "Marketplace payment must exactly match the listing price.";
+  }
+  if (lower.includes("governornonexistentproposal") || lower.includes("0x6ad06075")) {
+    return "That proposal does not exist on this governor.";
+  }
+  if (lower.includes("governorunexpectedproposalstate") || lower.includes("0x31b75e4d")) {
+    return "Voting is only available while a proposal is Active.";
+  }
+  if (lower.includes("governoralreadycastvote") || lower.includes("0x71c6af49")) {
+    return "This wallet has already voted on that proposal.";
+  }
   return message.split("\n")[0];
 }
 

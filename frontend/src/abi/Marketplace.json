@@ -1,4 +1,7 @@
 [
+  { "type": "function", "name": "listings", "stateMutability": "view", "inputs": [{ "name": "listingId", "type": "uint256" }], "outputs": [{ "name": "itemId", "type": "uint256" }, { "name": "amount", "type": "uint256" }, { "name": "price", "type": "uint256" }, { "name": "seller", "type": "address" }, { "name": "active", "type": "bool" }] },
   { "type": "function", "name": "buy", "stateMutability": "payable", "inputs": [{ "name": "listingId", "type": "uint256" }], "outputs": [] },
-  { "type": "function", "name": "cancel", "stateMutability": "nonpayable", "inputs": [{ "name": "listingId", "type": "uint256" }], "outputs": [] }
+  { "type": "function", "name": "cancel", "stateMutability": "nonpayable", "inputs": [{ "name": "listingId", "type": "uint256" }], "outputs": [] },
+  { "type": "error", "name": "ListingInactive", "inputs": [] },
+  { "type": "error", "name": "IncorrectPayment", "inputs": [{ "name": "expected", "type": "uint256" }, { "name": "actual", "type": "uint256" }] }
 ]

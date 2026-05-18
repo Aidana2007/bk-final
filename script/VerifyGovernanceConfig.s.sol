@@ -22,8 +22,8 @@ contract VerifyGovernanceConfig is Script {
 
         require(governor.timelock() == timelockAddress, "Governor timelock mismatch");
         require(timelock.getMinDelay() == 2 days, "Timelock delay must be 2 days");
-        require(governor.votingDelay() == 1 days, "Governor votingDelay must be 1 day");
-        require(governor.votingPeriod() == 1 weeks, "Governor votingPeriod must be 1 week");
+        require(governor.votingDelay() == 1 minutes, "Governor votingDelay must be 1 minute");
+        require(governor.votingPeriod() == 1 days, "Governor votingPeriod must be 1 day");
         require(governor.quorumNumerator() == 4, "Governor quorum must be 4 percent");
         require(
             timelock.hasRole(timelock.PROPOSER_ROLE(), governorAddress),

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Abi, Address, formatUnits, isAddress, parseUnits, zeroAddress } from "viem";
+import { Abi, Address, formatEther, formatUnits, isAddress, parseUnits, zeroAddress } from "viem";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
 import { ArrowDownUp, Hammer, ShoppingCart, Sparkles, Vote } from "lucide-react";
 import ammAbi from "./abi/AMM.json";
 import gameItemsAbi from "./abi/GameItems.json";
 import governorAbi from "./abi/Governor.json";
+import marketplaceAbi from "./abi/Marketplace.json";
 import { ConnectBar } from "./components/ConnectBar";
 import { useGameActions } from "./hooks/useGameActions";
 import { contracts, subgraphUrl } from "./web3/addresses";
@@ -22,6 +23,10 @@ function shortAddress(value?: string) {
 
 function configured(value: Address) {
   return value !== zeroAddress;
+}
+
+function parseOptionalBigInt(value: string) {
+  return /^\d+$/.test(value) ? BigInt(value) : undefined;
 }
 
 function useSubgraphDashboard(account?: Address) {
@@ -87,23 +92,71 @@ function ProposalRow({ proposalId, onVote }: { proposalId: bigint; onVote: (supp
     query: { enabled: configured(contracts.governor) },
   });
   const label = typeof proposalState.data === "number" ? stateLabels[proposalState.data] : "Unknown";
+  const isActive = proposalState.data === 1;
+  const status = proposalState.error ? "Not found" : label;
 
   return (
     <div className="tableRow">
       <span>#{proposalId.toString()}</span>
-      <span>{label}</span>
+      <span>{status}</span>
       <div className="inlineActions">
-        <button type="button" onClick={() => onVote(1)}>
+        <button type="button" disabled={!isActive} onClick={() => onVote(1)}>
           For
         </button>
-        <button type="button" onClick={() => onVote(0)}>
+        <button type="button" disabled={!isActive} onClick={() => onVote(0)}>
           Against
         </button>
-        <button type="button" onClick={() => onVote(2)}>
+        <button type="button" disabled={!isActive} onClick={() => onVote(2)}>
           Abstain
         </button>
       </div>
     </div>
+  );
+}
+
+function MarketplacePanel({ onBuy }: { onBuy: (listingId: bigint, priceEth: string) => void }) {
+  const [listingId, setListingId] = useState("2");
+  const listingNumericId = parseOptionalBigInt(listingId);
+  const listing = useReadContract({
+    address: contracts.marketplace,
+    abi: marketplaceAbi as Abi,
+    functionName: "listings",
+    args: listingNumericId ? [listingNumericId] : undefined,
+    query: { enabled: Boolean(listingNumericId && configured(contracts.marketplace)) },
+  });
+  const listingData = listing.data as [bigint, bigint, bigint, Address, boolean] | undefined;
+  const [itemId, amount, price, , active] = listingData ?? [0n, 0n, 0n, zeroAddress, false];
+  const priceEth = price > 0n ? formatEther(price) : "";
+  const canBuy = Boolean(listingNumericId && active && price > 0n);
+
+  return (
+    <article className="panel">
+      <h3>
+        <ShoppingCart size={18} />
+        Marketplace
+      </h3>
+      <label>
+        Listing
+        <input value={listingId} onChange={(event) => setListingId(event.target.value)} />
+      </label>
+      <div className="table">
+        <div className="tableRow">
+          <span>Status</span>
+          <strong>{active ? "Active" : "Inactive"}</strong>
+        </div>
+        <div className="tableRow">
+          <span>Item</span>
+          <strong>{itemId > 0n ? `${amount.toString()} x item ${itemId.toString()}` : "-"}</strong>
+        </div>
+        <div className="tableRow">
+          <span>Price</span>
+          <strong>{priceEth ? `${priceEth} ETH` : "-"}</strong>
+        </div>
+      </div>
+      <button type="button" disabled={!canBuy} onClick={() => listingNumericId && onBuy(listingNumericId, priceEth)}>
+        Buy
+      </button>
+    </article>
   );
 }
 
@@ -120,8 +173,6 @@ export function App() {
       .filter(Boolean)
       .map(BigInt)
   );
-  const [listingId, setListingId] = useState("");
-  const [listingPrice, setListingPrice] = useState("");
   const [swapToken, setSwapToken] = useState<Address>(zeroAddress);
   const [swapAmount, setSwapAmount] = useState("");
   const [minOut, setMinOut] = useState("");
@@ -170,8 +221,8 @@ export function App() {
   });
 
   const handleAddProposal = () => {
-    if (!proposalInput) return;
-    const proposalId = BigInt(proposalInput);
+    const proposalId = parseOptionalBigInt(proposalInput);
+    if (!proposalId) return;
     setProposalIds((current) => (current.includes(proposalId) ? current : [proposalId, ...current]));
     setProposalInput("");
   };
@@ -328,23 +379,7 @@ export function App() {
             </div>
           </article>
 
-          <article className="panel">
-            <h3>
-              <ShoppingCart size={18} />
-              Marketplace
-            </h3>
-            <label>
-              Listing
-              <input value={listingId} onChange={(event) => setListingId(event.target.value)} />
-            </label>
-            <label>
-              ETH
-              <input value={listingPrice} onChange={(event) => setListingPrice(event.target.value)} />
-            </label>
-            <button type="button" disabled={!listingId || !listingPrice} onClick={() => actions.buyListing(BigInt(listingId), listingPrice)}>
-              Buy
-            </button>
-          </article>
+          <MarketplacePanel onBuy={actions.buyListing} />
         </section>
 
         {(actions.hash || actions.error || graph.error) && (
