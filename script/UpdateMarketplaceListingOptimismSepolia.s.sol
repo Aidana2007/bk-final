@@ -14,8 +14,7 @@ contract UpdateMarketplaceListingOptimismSepolia is Script {
     function run() external {
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerKey);
-        GameItemMarketplace marketplace =
-            GameItemMarketplace(vm.envAddress("MARKETPLACE"));
+        GameItemMarketplace marketplace = GameItemMarketplace(vm.envAddress("MARKETPLACE"));
 
         vm.startBroadcast(deployerKey);
 
